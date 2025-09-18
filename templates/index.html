@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Inventario</title>
+    <!-- Enlace al archivo CSS externo -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>🏪 Gestión de Inventario</h1>
+        
+        <!-- Contenedor para mensajes de alerta dinámicos -->
+        <div id="alertContainer"></div>
+        
+        <!-- Estadísticas -->
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalProductos">0</div>
+                <div class="stat-label">Total Productos</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="productosExpirados">0</div>
+                <div class="stat-label">Expirados</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="productosProximos">0</div>
+                <div class="stat-label">Próximos a Expirar</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="productosVigentes">0</div>
+                <div class="stat-label">Vigentes</div>
+            </div>
+        </div>
+
+        <!-- Formulario para agregar productos -->
+        <div class="card">
+            <h2>➕ Agregar Nuevo Producto</h2>
+            <form id="productoForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="nombre">Nombre del Producto:</label>
+                        <!-- Añadido list para datalist de nombres de productos -->
+                        <input type="text" id="nombre" name="nombre" list="nombresProductosList" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="tipo">Tipo de Producto:</label>
+                        <input type="text" id="tipo" name="tipo" list="tiposProductos" required>
+                        <datalist id="tiposProductos"></datalist>
+                    </div>
+                    <div class="form-group">
+                        <label for="cantidad">Cantidad:</label>
+                        <input type="number" id="cantidad" name="cantidad" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="fechaExpedicion">Fecha de Expedición:</label>
+                        <input type="date" id="fechaExpedicion" name="fechaExpedicion" required>
+                    </div>
+                    <!-- Nuevo campo para Supermercado -->
+                    <div class="form-group">
+                        <label for="supermercado">Supermercado:</label>
+                        <input type="text" id="supermercado" name="supermercado" list="supermercadosList" required>
+                        <datalist id="supermercadosList"></datalist>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Agregar Producto</button>
+            </form>
+        </div>
+
+        <!-- Filtros y búsqueda -->
+        <div class="card">
+            <h2>🔍 Filtros y Búsqueda</h2>
+            <!-- Ahora es un formulario que se enviará con el botón "Buscar" -->
+            <form id="filterForm">
+                <div class="filters">
+                    <div class="form-group">
+                        <label for="filtroTipo">Filtrar por Tipo:</label>
+                        <select id="filtroTipo" name="tipo">
+                            <option value="">Todos los tipos</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="busqueda">Buscar por Nombre:</label>
+                        <input type="text" id="busqueda" name="busqueda" placeholder="Escriba el nombre del producto...">
+                    </div>
+                    <div class="form-group">
+                        <label for="diasExpiracion">Expira en días:</label>
+                        <input type="number" id="diasExpiracion" name="dias_expiracion" placeholder="ej: 7" min="0">
+                    </div>
+                    <!-- Nuevo filtro para Supermercado -->
+                    <div class="form-group">
+                        <label for="filtroSupermercado">Filtrar por Supermercado:</label>
+                        <select id="filtroSupermercado" name="supermercado">
+                            <option value="">Todos los supermercados</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>&nbsp;</label> <!-- Espacio para alinear el botón -->
+                        <button type="submit" class="btn btn-primary">Buscar</button> <!-- Botón de búsqueda explícito -->
+                        <button type="button" class="btn btn-success" onclick="limpiarFiltros()">Limpiar Filtros</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Lista de productos -->
+        <div class="card">
+            <h2>📦 Inventario de Productos</h2>
+            <div class="table-container">
+                <table id="productosTable">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Tipo</th>
+                            <th>Cantidad</th>
+                            <th>Fecha de Expedición</th>
+                            <th>Supermercado</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productosBody">
+                        <tr>
+                            <td colspan="7" class="loading">Cargando productos...</td> <!-- Colspan ajustado -->
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para editar producto -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="cerrarModal()">&times;</span>
+            <h2>✏️ Editar Producto</h2>
+            <form id="editForm">
+                <input type="hidden" id="editId">
+                <div class="form-group">
+                    <label for="editNombre">Nombre del Producto:</label>
+                    <!-- Añadido list para datalist de nombres de productos en el modal -->
+                    <input type="text" id="editNombre" list="nombresProductosListEdit" required>
+                </div>
+                <div class="form-group">
+                    <label for="editTipo">Tipo de Producto:</label>
+                    <input type="text" id="editTipo" required>
+                </div>
+                <div class="form-group">
+                    <label for="editCantidad">Cantidad:</label>
+                    <input type="number" id="editCantidad" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="editFechaExpedicion">Fecha de Expedición:</label>
+                    <input type="date" id="editFechaExpedicion" required>
+                </div>
+                <!-- Nuevo campo para Supermercado en el modal de edición -->
+                <div class="form-group">
+                    <label for="editSupermercado">Supermercado:</label>
+                    <input type="text" id="editSupermercado" list="supermercadosListEdit" required>
+                    <datalist id="supermercadosListEdit"></datalist>
+                </div>
+                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                    <button type="button" class="btn btn-warning" onclick="cerrarModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-success">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Datalists para sugerencias de nombres de productos (se llenan con JS) -->
+    <datalist id="nombresProductosList"></datalist>
+    <datalist id="nombresProductosListEdit"></datalist>
+
+    <!-- Enlace al archivo JavaScript externo -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Producto - Gestor de Inventario Local</title>
+    <!-- Enlace al archivo CSS externo -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Este archivo ya no se usa directamente para la edición en el nuevo flujo JS.
+         La edición se maneja con un modal en index.html.
+         Si mantienes este archivo, su contenido debería ser similar al modal de index.html.
+         Sin embargo, para el enfoque SPA, este archivo es redundante.
+         Lo mantendré vacío o con una nota para claridad.
+    -->
+    <div class="container">
+        <p>Este archivo HTML ya no se utiliza directamente en la navegación para la edición.
+           La funcionalidad de edición ahora se maneja a través de un modal en `index.html`
+           impulsado por JavaScript.</p>
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">Volver al Inventario</a>
+    </div>
+</body>
+</html>
